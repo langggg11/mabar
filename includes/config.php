@@ -28,7 +28,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Site configuration
 define('SITE_NAME', 'Mabar');
-define('SITE_URL', 'http://localhost/mabar'); 
+define('SITE_URL', 'http://mabar/mabar'); 
 define('UPLOAD_PATH', 'assets/images/');
 
 // Error reporting (disable in production)
