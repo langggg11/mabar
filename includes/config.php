@@ -24,7 +24,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 define('SITE_NAME', 'Mabar');
-define('SITE_URL', 'http://mabar/mabar'); 
+define('SITE_URL', 'http://localhost/mabar'); 
 define('UPLOAD_PATH', 'assets/images/');
 
 error_reporting(E_ALL);
