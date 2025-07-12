@@ -1,7 +1,7 @@
 <?php
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'projec15_projectpbw_fixx');
-define('DB_USER', 'projec15_roott'); 
+define('DB_USER', 'projec15_root'); 
 define('DB_PASS', '@kaesquare123'); 
 define('DB_CHARSET', 'utf8mb4');
 
