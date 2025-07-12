@@ -71,40 +71,24 @@ $rating_info = getProductRating($product['id']);
                     
                     <!-- Product Specs Quick View -->
                     <div class="product-specs-quick">
-                        <?php if ($product['rod_length']): ?>
-                            <div class="spec-item">
-                                <span class="spec-label">Panjang:</span>
-                                <span class="spec-value"><?php echo $product['rod_length']; ?></span>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($product['gear_ratio']): ?>
-                            <div class="spec-item">
-                                <span class="spec-label">Gear Ratio:</span>
-                                <span class="spec-value"><?php echo $product['gear_ratio']; ?></span>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($product['bearings']): ?>
-                            <div class="spec-item">
-                                <span class="spec-label">Bearings:</span>
-                                <span class="spec-value"><?php echo $product['bearings']; ?></span>
-                            </div>
-                        <?php endif; ?>
-                            
-                        <?php if ($product['weight']): ?>
-                            <div class="spec-item">
-                                <span class="spec-label">Berat:</span>
-                                <span class="spec-value"><?php echo $product['weight']; ?></span>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($product['target_fish']): ?>
-                            <div class="spec-item">
-                                <span class="spec-label">Target Ikan:</span>
-                                <span class="spec-value"><?php echo $product['target_fish']; ?></span>
-                            </div>
-                        <?php endif; ?>
+                        <?php
+                        if (!empty($product['specifications'])) {
+                            $specs = explode("\n", trim($product['specifications']));
+                            $count = 0;
+                            foreach ($specs as $spec) {
+                                if (trim($spec) && $count < 3) {
+                                    $spec_parts = explode(':', $spec, 2);
+                                    if (count($spec_parts) == 2) {
+                                        echo '<div class="spec-item">';
+                                        echo '<span class="spec-label">' . htmlspecialchars(trim($spec_parts[0])) . ':</span>';
+                                        echo '<span class="spec-value">' . htmlspecialchars(trim($spec_parts[1])) . '</span>';
+                                        echo '</div>';
+                                        $count++;
+                                    }
+                                }
+                            }
+                        }
+                        ?>
                     </div>
                     
                     <!-- Action Buttons -->
@@ -114,15 +98,23 @@ $rating_info = getProductRating($product['id']);
                             Lihat di Toko Online
                         </a>
                         
-                        <button class="btn btn-secondary btn-large wishlist-btn-detail" 
+                        <?php if (isAdmin()): ?>
+                        <a href="edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-secondary btn-large">
+                            <i class="fas fa-edit"></i>
+                            Edit Produk
+                        </a>
+                        <?php else: ?>
+                        <button class="btn btn-secondary btn-large wishlist-btn-detail"
                                 data-product-id="<?php echo $product['id']; ?>"
                                 onclick="requireAuth(() => toggleWishlistDetail(<?php echo $product['id']; ?>), 'menambahkan produk ke daftar yang disukai')">
                             <i class="far fa-heart"></i>
                             Tambahkan ke Produk yang Disukai
                         </button>
+                        <?php endif; ?>
                     </div>
 
-                    <!-- Review Action - Always Show Interface -->
+                    <?php if (!isAdmin()): ?>
+                    <!-- Review Action -->
                     <div class="product-review-action">
                         <button class="btn btn-secondary" id="writeReviewBtn">
                             <i class="fas fa-pencil-alt"></i> Tulis Ulasan
@@ -142,7 +134,7 @@ $rating_info = getProductRating($product['id']);
                                 </div>
                                 <div class="form-group">
                                     <label for="review_text">Ulasan Anda</label>
-                                    <textarea id="review_text" name="review_text" rows="4" 
+                                    <textarea id="review_text" name="review_text" rows="4"
                                               placeholder="Bagikan pemikiran Anda tentang produk ini..."
                                               <?php echo !$current_user ? 'readonly onclick="requireAuth(() => {}, \'menulis ulasan\')"' : ''; ?>></textarea>
                                 </div>
@@ -151,6 +143,7 @@ $rating_info = getProductRating($product['id']);
                             </form>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
             

@@ -95,12 +95,7 @@ try {
   <!-- Admin Dashboard -->
   <section class="admin-dashboard">
       <div class="container">
-          <div class="admin-header">
-              <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard - Mabar</h1>
-              <p>Kelola dan pantau aktivitas platform Mabar</p>
-          </div>
           
-          <!-- Statistics Cards -->
           <div class="stats-grid">
               <div class="stat-card users">
                   <div class="stat-icon">
@@ -201,6 +196,47 @@ try {
                                           <?php for ($i = 1; $i <= 5; $i++): ?>
                                               <i class="<?php echo $i <= $review['rating'] ? 'fas' : 'far'; ?> fa-star"></i>
                                           <?php endfor; ?>
+                                      </div>
+                                  </div>
+                                  <?php if ($review['review_text']): ?>
+                                      <div class="review-text">
+                                          <?php echo htmlspecialchars(substr($review['review_text'], 0, 150)); ?>
+                                          <?php echo strlen($review['review_text']) > 150 ? '...' : ''; ?>
+                                      </div>
+                                  <?php endif; ?>
+                                  <div class="review-date">
+                                      <?php echo date('d M Y, H:i', strtotime($review['created_at'])); ?>
+                                  </div>
+                              </div>
+                          <?php endforeach; ?>
+                      <?php endif; ?>
+                  </div>
+              </div>
+              
+              <!-- Recent Reviews with Delete Option -->
+              <div class="admin-section">
+                  <div class="section-header">
+                      <h2><i class="fas fa-comments"></i> Kelola Ulasan</h2>
+                  </div>
+                  <div class="reviews-management">
+                      <?php if (empty($recent_reviews)): ?>
+                          <div class="no-data">Belum ada ulasan</div>
+                      <?php else: ?>
+                          <?php foreach ($recent_reviews as $review): ?>
+                              <div class="review-item-admin" id="review-<?php echo $review['id']; ?>">
+                                  <div class="review-header">
+                                      <div class="reviewer-info">
+                                          <strong><?php echo htmlspecialchars($review['user_name']); ?></strong> : <?php echo htmlspecialchars($review['product_name']); ?>
+                                      </div>
+                                      <div class="review-actions">
+                                          <div class="review-rating">
+                                              <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                  <i class="<?php echo $i <= $review['rating'] ? 'fas' : 'far'; ?> fa-star"></i>
+                                              <?php endfor; ?>
+                                          </div>
+                                          <button class="btn-delete-review" onclick="deleteReview(<?php echo $review['id']; ?>)" title="Hapus Review">
+                                              <i class="fas fa-trash"></i>
+                                          </button>
                                       </div>
                                   </div>
                                   <?php if ($review['review_text']): ?>
@@ -554,6 +590,147 @@ try {
               gap: var(--space-2);
           }
       }
-  </style>
+      
+      .reviews-management {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-4);
+      }
+      
+      .review-item-admin {
+          padding: var(--space-6);
+          background: var(--gray-50);
+          border-radius: var(--radius-xl);
+          border-left: 4px solid var(--primary-500);
+          transition: all var(--transition-fast);
+      }
+      
+      .review-item-admin:hover {
+          box-shadow: var(--shadow-md);
+      }
+      
+      .review-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: var(--space-3);
+      }
+      
+      .review-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+      }
+      
+      .btn-delete-review {
+          background: #ef4444;
+          color: white;
+          border: none;
+          padding: var(--space-2);
+          border-radius: var(--radius-md);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+      }
+      
+      .btn-delete-review:hover {
+          background: #dc2626;
+          transform: scale(1.05);
+      }
+</style>
+<script>
+// Function to delete review
+async function deleteReview(reviewId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus ulasan ini?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/reviews.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                review_id: reviewId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Remove review from DOM
+            const reviewElement = document.getElementById(`review-${reviewId}`);
+            if (reviewElement) {
+                reviewElement.style.opacity = '0';
+                setTimeout(() => {
+                    reviewElement.remove();
+                }, 300);
+            }
+            
+            // Show success message
+            showToastNotification('Ulasan berhasil dihapus', 'success');
+        } else {
+            showToastNotification(result.message || 'Gagal menghapus ulasan', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        showToastNotification('Terjadi kesalahan saat menghapus ulasan', 'error');
+    }
+}
+
+function showToastNotification(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+</script>
 </body>
 </html>

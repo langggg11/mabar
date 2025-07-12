@@ -265,4 +265,41 @@ function searchProducts($query, $limit = 20) {
     $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $limit]);
     return $stmt->fetchAll();
 }
+
+// Admin functions for managing reviews
+function deleteReview($reviewId) {
+    if (!isAdmin()) {
+        throw new Exception('Unauthorized access');
+    }
+    
+    global $pdo;
+    $stmt = $pdo->prepare("DELETE FROM reviews WHERE id = ?");
+    return $stmt->execute([$reviewId]);
+}
+
+function getAllReviews($limit = 50) {
+    if (!isAdmin()) {
+        throw new Exception('Unauthorized access');
+    }
+    
+    global $pdo;
+    $stmt = $pdo->prepare("
+        SELECT r.*, u.name as user_name, p.name as product_name, p.slug as product_slug
+        FROM reviews r 
+        JOIN users u ON r.user_id = u.id 
+        JOIN products p ON r.product_id = p.id 
+        ORDER BY r.created_at DESC 
+        LIMIT ?
+    ");
+    $stmt->execute([$limit]);
+    return $stmt->fetchAll();
+}
+
+// Function to get category by slug
+function getCategoryBySlug($slug) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM categories WHERE slug = ?");
+    $stmt->execute([$slug]);
+    return $stmt->fetch();
+}
 ?>

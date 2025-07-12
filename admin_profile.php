@@ -1,21 +1,16 @@
 <?php
-$page_title = "Profil Saya - Mabar";
-$page_description = "Kelola profil dan pengaturan akun Anda";
+$page_title = "Profil Admin - Mabar";
+$page_description = "Kelola profil dan pengaturan akun admin Anda";
 
 require_once 'includes/functions.php';
 
-// Redirect if not logged in
-$current_user = getCurrentUser();
-if (!$current_user) {
+// Redirect if not logged in or not an admin
+if (!isLoggedIn() || !isAdmin()) {
     header('Location: index.php');
     exit;
 }
 
-// Redirect admin to admin profile page
-if (isAdmin()) {
-    header('Location: admin_profile.php');
-    exit;
-}
+$current_user = getCurrentUser();
 
 // Handle password change
 $message = '';
@@ -55,13 +50,15 @@ if ($_POST && isset($_POST['change_password'])) {
     }
 }
 
-// Get user statistics
+// Get admin statistics
 try {
-    $stmt = $pdo->prepare("SELECT COUNT(*) as wishlist_count FROM wishlist WHERE user_id = ?");
-    $stmt->execute([$current_user['id']]);
-    $wishlist_count = $stmt->fetchColumn();
+    $stmt = $pdo->query("SELECT COUNT(*) FROM products");
+    $product_count = $stmt->fetchColumn();
+    $stmt = $pdo->query("SELECT COUNT(*) FROM users");
+    $user_count = $stmt->fetchColumn();
 } catch (Exception $e) {
-    $wishlist_count = 0;
+    $product_count = 0;
+    $user_count = 0;
 }
 ?>
 
@@ -91,10 +88,10 @@ try {
         <div class="container">
             <div class="profile-header">
                 <h1>
-                    <i class="fas fa-user-circle"></i>
-                    Profil Saya
+                    <i class="fas fa-user-shield"></i>
+                    Admin Mabar
                 </h1>
-                <p>Kelola informasi akun dan pengaturan Anda dengan mudah</p>
+                <p>Kelola informasi akun dan pengaturan </p>
             </div>
             
             <div class="profile-content">
@@ -123,29 +120,15 @@ try {
                             <div class="info-item">
                                 <label><i class="fas fa-shield-alt"></i> Status:</label>
                                 <span class="info-value">
-                                    <?php if ($current_user['is_admin']): ?>
-                                        <span class="admin-badge">
-                                            <i class="fas fa-crown"></i>
-                                            Administrator
-                                        </span>
-                                    <?php else: ?>
-                                        <span style="color: var(--primary-600); font-weight: 600;">
-                                            <i class="fas fa-user"></i> Member
-                                        </span>
-                                    <?php endif; ?>
+                                    <span class="admin-badge">
+                                        
+                                        Administrator
+                                    </span>
                                 </span>
                             </div>
                             <div class="info-item">
                                 <label><i class="fas fa-calendar-alt"></i> Bergabung:</label>
                                 <span class="info-value"><?php echo date('d F Y', strtotime($current_user['created_at'])); ?></span>
-                            </div>
-                            <div class="info-item">
-                                <label><i class="fas fa-heart"></i> Wishlist:</label>
-                                <span class="info-value">
-                                    <span style="color: var(--accent-pink); font-weight: 700;">
-                                        <?php echo $wishlist_count; ?> produk
-                                    </span>
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -201,7 +184,6 @@ try {
                                     <i class="fas fa-check-circle"></i>
                                     Konfirmasi Password Baru
                                 </label>
-                                <!-- Confirm password stays hidden always -->
                                 <input type="password" id="confirm_password" name="confirm_password" minlength="6" required 
                                        placeholder="Ulangi password baru">
                             </div>
@@ -224,32 +206,27 @@ try {
                     </div>
                     <div class="card-body">
                         <div class="quick-actions">
-                            <a href="wishlist.php" class="action-btn">
+                            <a href="admin.php" class="action-btn admin-action">
                                 <div>
-                                    <i class="fas fa-heart"></i>
-                                    <span>Lihat Wishlist (<?php echo $wishlist_count; ?>)
-                                    </span>
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span>Dashboard</span>
                                 </div>
                                 <i class="fas fa-chevron-right"></i>
                             </a>
-                            
-                            <a href="index.php" class="action-btn">
+                            <a href="manage-products.php" class="action-btn admin-action">
                                 <div>
-                                    <i class="fas fa-home"></i>
-                                    <span>Kembali ke Beranda</span>
+                                    <i class="fas fa-box-open"></i>
+                                    <span>Kelola</span>
                                 </div>
                                 <i class="fas fa-chevron-right"></i>
                             </a>
-                            
-                            <?php if ($current_user['is_admin']): ?>
-                                <a href="admin.php" class="action-btn admin-action">
-                                    <div>
-                                        <i class="fas fa-crown"></i>
-                                        <span>Panel Admin</span>
-                                    </div>
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            <?php endif; ?>
+                             <a href="add-product.php" class="action-btn admin-action">
+                                <div>
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Tambah Produk</span>
+                                </div>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
                         </div>
                     </div>
                 </div>

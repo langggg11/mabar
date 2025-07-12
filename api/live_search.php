@@ -1,34 +1,30 @@
 <?php
-require_once '../includes/functions.php';
+require_once '../includes/config.php';
 
 header('Content-Type: application/json');
-$term = $_GET['term'] ?? '';
-$results = [];
 
-if (strlen($term) >= 2) {
-    try {
-        $stmt = $pdo->prepare("
-            SELECT name, slug, 'Produk' as type
-            FROM products
-            WHERE name LIKE ?
-            ORDER BY
-                CASE
-                    WHEN name LIKE ? THEN 1
-                    WHEN name LIKE ? THEN 2
-                    ELSE 3
-                END, 
-                popularity_score DESC
-            LIMIT 7
-        ");
-        $searchTermContains = '%' . $term . '%';
-        $searchTermStarts = $term . '%';
-        $stmt->execute([$searchTermContains, $searchTermStarts, $searchTermContains]);
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$query = $_GET['q'] ?? '';
+$limit = intval($_GET['limit'] ?? 10);
 
-    } catch (PDOException $e) {
-        error_log("Live search error: " . $e->getMessage());
-    }
+if (strlen($query) < 2) {
+    echo json_encode([]);
+    exit;
 }
 
-echo json_encode($results);
+try {
+    $search_term = '%' . $query . '%';
+    $stmt = $pdo->prepare("
+        SELECT id, name, slug, image, price 
+        FROM products 
+        WHERE name LIKE ? 
+        ORDER BY name ASC 
+        LIMIT ?
+    ");
+    $stmt->execute([$search_term, $limit]);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode($results);
+} catch (Exception $e) {
+    echo json_encode([]);
+}
 ?>

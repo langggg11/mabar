@@ -1,4 +1,3 @@
-<!-- Community Section -->
 <section class="community">
     <div class="container">
         <div class="community-content">
@@ -21,7 +20,6 @@
     </div>
 </section>
 
-<!-- Footer -->
 <footer class="footer">
     <div class="container">
         <div class="footer-content">
@@ -60,13 +58,13 @@
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; 2025 Mabar</p>
+            <p>&copy; 2025 Mabar. Semua Hak Dilindungi.</p>
         </div>
     </div>
 </footer>
 
 <style>
-/* Footer Social Media Styles */
+
 .social-links {
     display: flex;
     gap: 15px;
@@ -91,7 +89,6 @@
     color: var(--primary-color);
 }
 
-/* Contact Items Styles */
 .contact-item {
     display: inline-flex;
     align-items: center;
@@ -110,7 +107,6 @@
     text-align: center;
 }
 
-/* Remove default link styles for contact items */
 .footer-links li:has(.contact-item) {
     list-style: none;
 }

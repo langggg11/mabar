@@ -5,6 +5,33 @@ header('Content-Type: application/json');
 
 $current_user = getCurrentUser();
 
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    // Admin delete review
+    if (!$current_user || !isAdmin()) {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
+        exit;
+    }
+
+    $input = json_decode(file_get_contents('php://input'), true);
+    $review_id = $input['review_id'] ?? '';
+
+    if (empty($review_id)) {
+        echo json_encode(['success' => false, 'message' => 'Review ID required']);
+        exit;
+    }
+
+    try {
+        if (deleteReview($review_id)) {
+            echo json_encode(['success' => true, 'message' => 'Review berhasil dihapus']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal menghapus review']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$current_user) {
         echo json_encode(['success' => false, 'message' => 'Anda harus login terlebih dahulu']);

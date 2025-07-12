@@ -4772,4 +4772,29 @@ p {
   background: rgba(14, 165, 233, 0.1);
 }
 
+[data-theme="dark"] .profile-card {
+    background: var(--profile-card-bg);
+    border-color: var(--profile-card-border);
+}
+
+[data-theme="dark"] .card-header {
+    background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+}
+
+[data-theme="dark"] .info-item {
+    background: var(--profile-input-bg);
+    border-color: var(--profile-input-border);
+}
+
+[data-theme="dark"] .form-group input[type="password"] {
+    background: var(--profile-input-bg);
+    border-color: var(--profile-input-border);
+    color: var(--profile-text-primary);
+}
+
+[data-theme="dark"] .action-btn {
+            background: var(--profile-input-bg);
+            border-color: var(--profile-input-border);
+            color: var(--profile-text-primary);
+}
 

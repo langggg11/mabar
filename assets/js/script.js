@@ -59,6 +59,7 @@ const userWishlist = new Set()
           "tidak boleh kosong",
           "berhasil regis silahkan login",
           "terjadi kesalahan saat",
+          "terjadi kesalahan saat",
           "email sudah terdaftar",
         ]
 
@@ -446,7 +447,12 @@ class MabarApp {
   setupProductEvents() {
     // Delegate event handling for dynamic content
     document.addEventListener("click", (e) => {
-      if (e.target.closest(".wishlist-btn")) {
+      // Cek apakah user adalah admin
+      const isAdmin =
+        document.querySelector(".user-menu") !== null &&
+        document.querySelector(".user-menu").classList.contains("admin-menu")
+
+      if (e.target.closest(".wishlist-btn") && !isAdmin) {
         e.preventDefault()
         const productId = e.target.closest(".wishlist-btn").dataset.productId
         this.toggleWishlist(productId)
@@ -496,195 +502,195 @@ class MabarApp {
     })
   }
 
-setupProductDetailZoom() {
-  const mainImage = document.querySelector(".main-image img")
-  if (!mainImage) return
+  setupProductDetailZoom() {
+    const mainImage = document.querySelector(".main-image img")
+    if (!mainImage) return
 
-  const container = mainImage.parentElement
-  let lens,
-    result,
-    isZoomActive = false
+    const container = mainImage.parentElement
+    let lens,
+      result,
+      isZoomActive = false
 
-  // Tunggu gambar selesai dimuat
-  if (mainImage.complete) {
-    initializeZoom()
-  } else {
-    mainImage.addEventListener("load", initializeZoom)
-  }
-
-  function initializeZoom() {
-    container.addEventListener("mouseenter", showZoom)
-    container.addEventListener("mouseleave", hideZoom)
-    container.addEventListener("mousemove", moveLens)
-    mainImage.addEventListener("dragstart", (e) => e.preventDefault())
-  }
-
-  function showZoom() {
-    if (isZoomActive) return
-    isZoomActive = true
-
-    // Buat lens jika belum ada
-    if (!lens) {
-      lens = document.createElement("div")
-      lens.className = "zoom-lens"
-      container.appendChild(lens)
-    }
-
-    if (!result) {
-      result = document.createElement("div")
-      result.className = "zoom-result"
-      document.body.appendChild(result)
-    }
-
-    const lensSize = 300 
-    const resultSize = 600 
-
-    lens.style.width = lensSize + "px"
-    lens.style.height = lensSize + "px"
-    result.style.width = resultSize + "px"
-    result.style.height = resultSize + "px"
-
-    // Hitung rasio zoom
-    const zoomRatio = resultSize / lensSize
-
-    // Set background image untuk zoom result
-    result.style.backgroundImage = `url('${mainImage.src}')`
-    result.style.backgroundSize = `${mainImage.naturalWidth * zoomRatio}px ${mainImage.naturalHeight * zoomRatio}px`
-
-    // Posisikan result container
-    const containerRect = container.getBoundingClientRect()
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
-
-    let resultLeft = containerRect.right + scrollLeft + 20
-    let resultTop = containerRect.top + scrollTop
-
-    // Cek apakah result keluar dari layar
-    if (resultLeft + resultSize > window.innerWidth + scrollLeft) {
-      resultLeft = containerRect.left + scrollLeft - resultSize - 20
-    }
-
-    // Cek apakah result keluar dari layar vertikal
-    if (resultTop + resultSize > window.innerHeight + scrollTop) {
-      resultTop = window.innerHeight + scrollTop - resultSize - 20
-    }
-
-    result.style.left = resultLeft + "px"
-    result.style.top = resultTop + "px"
-    result.style.position = "absolute"
-
-    // Tampilkan elemen
-    lens.style.display = "block"
-    result.style.display = "block"
-    lens.style.opacity = "1"
-    result.style.opacity = "1"
-
-    container.style.cursor = "crosshair"
-  }
-
-  function moveLens(e) {
-    if (!lens || !result || !isZoomActive) return;
-
-    e.preventDefault();
-    const pos = getCursorPos(e);
-
-    // Hitung posisi lens
-    let x = pos.x - lens.offsetWidth / 2;
-    let y = pos.y - lens.offsetHeight / 2;
-
-    // Batasi lens dalam area container
-    const maxX = container.offsetWidth - lens.offsetWidth;
-    const maxY = container.offsetHeight - lens.offsetHeight;
-
-    x = Math.max(0, Math.min(x, maxX));
-    y = Math.max(0, Math.min(y, maxY));
-
-    // Set posisi lens
-    lens.style.left = x + "px";
-    lens.style.top = y + "px";
-
-    // Hitung rasio antara ukuran asli gambar dan ukuran yang ditampilkan
-    const scaleX = mainImage.naturalWidth / mainImage.offsetWidth;
-    const scaleY = mainImage.naturalHeight / mainImage.offsetHeight;
-
-    // Hitung rasio zoom dari hasil bagi ukuran result dengan lensa
-    const zoomRatioX = result.offsetWidth / lens.offsetWidth;
-    const zoomRatioY = result.offsetHeight / lens.offsetHeight;
-
-    // Terapkan semua rasio pada posisi background
-    const bgX = x * scaleX * zoomRatioX;
-    const bgY = y * scaleY * zoomRatioY;
-
-    result.style.backgroundPosition = `-${bgX}px -${bgY}px`;
-  }
-
-  function getCursorPos(e) {
-    const containerRect = container.getBoundingClientRect()
-    return {
-      x: e.clientX - containerRect.left,
-      y: e.clientY - containerRect.top,
-    }
-  }
-
-  function hideZoom() {
-    if (!isZoomActive) return
-    isZoomActive = false
-
-    if (lens) {
-      lens.style.opacity = "0"
-      setTimeout(() => {
-        lens.style.display = "none"
-      }, 200)
-    }
-
-    if (result) {
-      result.style.opacity = "0"
-      setTimeout(() => {
-        result.style.display = "none"
-      }, 200)
-    }
-
-    container.style.cursor = "default"
-  }
-
-  // Handle window events
-  window.addEventListener("resize", hideZoom)
-  window.addEventListener("scroll", hideZoom)
-}
-
-toggleTheme() {
-  this.theme = this.theme === "light" ? "dark" : "light"
-  document.documentElement.setAttribute("data-theme", this.theme)
-  localStorage.setItem("theme", this.theme)
-
-  const themeToggle = document.getElementById("themeToggle")
-  if (themeToggle) {
-    const icon = themeToggle.querySelector("i")
-    if (icon) {
-      icon.className = this.theme === "dark" ? "fas fa-sun" : "fas fa-moon"
-    }
-  }
-
-  // Add transition effect
-  document.body.style.transition = "background-color 0.3s ease, color 0.3s ease"
-  setTimeout(() => {
-    document.body.style.transition = ""
-  }, 300)
-  this.handleScroll()
-}
-
-handleScroll() {
-  const header = document.getElementById("header")
-  if (header) {
-    if (window.scrollY > 100) {
-      header.style.background = this.theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)"
-      header.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.1)"
+    // Tunggu gambar selesai dimuat
+    if (mainImage.complete) {
+      initializeZoom()
     } else {
-      header.style.background = this.theme === "dark" ? "rgba(15, 23, 42, 0.8)" : "rgba(255, 255, 255, 0.8)"
-      header.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)"
+      mainImage.addEventListener("load", initializeZoom)
+    }
+
+    function initializeZoom() {
+      container.addEventListener("mouseenter", showZoom)
+      container.addEventListener("mouseleave", hideZoom)
+      container.addEventListener("mousemove", moveLens)
+      mainImage.addEventListener("dragstart", (e) => e.preventDefault())
+    }
+
+    function showZoom() {
+      if (isZoomActive) return
+      isZoomActive = true
+
+      // Buat lens jika belum ada
+      if (!lens) {
+        lens = document.createElement("div")
+        lens.className = "zoom-lens"
+        container.appendChild(lens)
+      }
+
+      if (!result) {
+        result = document.createElement("div")
+        result.className = "zoom-result"
+        document.body.appendChild(result)
+      }
+
+      const lensSize = 300
+      const resultSize = 600
+
+      lens.style.width = lensSize + "px"
+      lens.style.height = lensSize + "px"
+      result.style.width = resultSize + "px"
+      result.style.height = resultSize + "px"
+
+      // Hitung rasio zoom
+      const zoomRatio = resultSize / lensSize
+
+      // Set background image untuk zoom result
+      result.style.backgroundImage = `url('${mainImage.src}')`
+      result.style.backgroundSize = `${mainImage.naturalWidth * zoomRatio}px ${mainImage.naturalHeight * zoomRatio}px`
+
+      // Posisikan result container
+      const containerRect = container.getBoundingClientRect()
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
+
+      let resultLeft = containerRect.right + scrollLeft + 20
+      let resultTop = containerRect.top + scrollTop
+
+      // Cek apakah result keluar dari layar
+      if (resultLeft + resultSize > window.innerWidth + scrollLeft) {
+        resultLeft = containerRect.left + scrollLeft - resultSize - 20
+      }
+
+      // Cek apakah result keluar dari layar vertikal
+      if (resultTop + resultSize > window.innerHeight + scrollTop) {
+        resultTop = window.innerHeight + scrollTop - resultSize - 20
+      }
+
+      result.style.left = resultLeft + "px"
+      result.style.top = resultTop + "px"
+      result.style.position = "absolute"
+
+      // Tampilkan elemen
+      lens.style.display = "block"
+      result.style.display = "block"
+      lens.style.opacity = "1"
+      result.style.opacity = "1"
+
+      container.style.cursor = "crosshair"
+    }
+
+    function moveLens(e) {
+      if (!lens || !result || !isZoomActive) return
+
+      e.preventDefault()
+      const pos = getCursorPos(e)
+
+      // Hitung posisi lens
+      let x = pos.x - lens.offsetWidth / 2
+      let y = pos.y - lens.offsetHeight / 2
+
+      // Batasi lens dalam area container
+      const maxX = container.offsetWidth - lens.offsetWidth
+      const maxY = container.offsetHeight - lens.offsetHeight
+
+      x = Math.max(0, Math.min(x, maxX))
+      y = Math.max(0, Math.min(y, maxY))
+
+      // Set posisi lens
+      lens.style.left = x + "px"
+      lens.style.top = y + "px"
+
+      // Hitung rasio antara ukuran asli gambar dan ukuran yang ditampilkan
+      const scaleX = mainImage.naturalWidth / mainImage.offsetWidth
+      const scaleY = mainImage.naturalHeight / mainImage.offsetHeight
+
+      // Hitung rasio zoom dari hasil bagi ukuran result dengan lensa
+      const zoomRatioX = result.offsetWidth / lens.offsetWidth
+      const zoomRatioY = result.offsetHeight / lens.offsetHeight
+
+      // Terapkan semua rasio pada posisi background
+      const bgX = x * scaleX * zoomRatioX
+      const bgY = y * scaleY * zoomRatioY
+
+      result.style.backgroundPosition = `-${bgX}px -${bgY}px`
+    }
+
+    function getCursorPos(e) {
+      const containerRect = container.getBoundingClientRect()
+      return {
+        x: e.clientX - containerRect.left,
+        y: e.clientY - containerRect.top,
+      }
+    }
+
+    function hideZoom() {
+      if (!isZoomActive) return
+      isZoomActive = false
+
+      if (lens) {
+        lens.style.opacity = "0"
+        setTimeout(() => {
+          lens.style.display = "none"
+        }, 200)
+      }
+
+      if (result) {
+        result.style.opacity = "0"
+        setTimeout(() => {
+          result.style.display = "none"
+        }, 200)
+      }
+
+      container.style.cursor = "default"
+    }
+
+    // Handle window events
+    window.addEventListener("resize", hideZoom)
+    window.addEventListener("scroll", hideZoom)
+  }
+
+  toggleTheme() {
+    this.theme = this.theme === "light" ? "dark" : "light"
+    document.documentElement.setAttribute("data-theme", this.theme)
+    localStorage.setItem("theme", this.theme)
+
+    const themeToggle = document.getElementById("themeToggle")
+    if (themeToggle) {
+      const icon = themeToggle.querySelector("i")
+      if (icon) {
+        icon.className = this.theme === "dark" ? "fas fa-sun" : "fas fa-moon"
+      }
+    }
+
+    // Add transition effect
+    document.body.style.transition = "background-color 0.3s ease, color 0.3s ease"
+    setTimeout(() => {
+      document.body.style.transition = ""
+    }, 300)
+    this.handleScroll()
+  }
+
+  handleScroll() {
+    const header = document.getElementById("header")
+    if (header) {
+      if (window.scrollY > 100) {
+        header.style.background = this.theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)"
+        header.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.1)"
+      } else {
+        header.style.background = this.theme === "dark" ? "rgba(15, 23, 42, 0.8)" : "rgba(255, 255, 255, 0.8)"
+        header.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)"
+      }
     }
   }
-}
 
   // GANTI metode performSearch
   performSearch(query) {
@@ -715,7 +721,7 @@ handleScroll() {
     document.addEventListener("click", handleClickOutside)
   }
 
-  // Enhanced Search Input Setup\
+  // Enhanced Search Input Setup
   setupSearchInput() {
     const searchInput = document.getElementById("searchInput")
     if (!searchInput) return
@@ -916,29 +922,44 @@ handleScroll() {
 
     // Setup intersection observer for new cards
     const newCards = container.querySelectorAll(".product-card")
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("fade-in")
         }
       })
-    })
+    }, observerOptions)
 
     newCards.forEach((card) => observer.observe(card))
   }
 
   createProductCard(product) {
     const isInWishlist = this.wishlist.has(product.id.toString())
+    const isAdmin =
+      document.querySelector(".user-menu") !== null &&
+      document.querySelector(".user-menu").classList.contains("admin-menu")
+    const isLoggedIn = this.isLoggedIn()
 
     return `
       <div class="product-card" data-slug="${product.slug}">
         <div class="product-image">
           <img src="${product.image}" alt="${product.name}" loading="lazy">
-          <button class="wishlist-btn ${isInWishlist ? "active" : ""}" 
-                  data-product-id="${product.id}"
-                  aria-label="Tambah ke wishlist">
-            <i class="${isInWishlist ? "fas" : "far"} fa-heart"></i>
-          </button>
+          ${
+            !isAdmin
+              ? `
+            <button class="wishlist-btn ${isInWishlist ? "active" : ""}" 
+                    data-product-id="${product.id}"
+                    aria-label="Tambah ke wishlist">
+              <i class="${isInWishlist ? "fas" : "far"} fa-heart"></i>
+            </button>
+          `
+              : ""
+          }
           ${product.is_promo ? '<span class="product-badge promo">PROMO</span>' : ""}
           ${product.is_new ? '<span class="product-badge new">BARU</span>' : ""}
         </div>
@@ -961,12 +982,27 @@ handleScroll() {
               Detail
             </a>
             ${
-              product.shopee_link
-                ? `<a href="${product.shopee_link}" target="_blank" class="btn btn-secondary">
-              <i class="fas fa-shopping-cart"></i>
-              Beli
-            </a>`
-                : ""
+              isAdmin
+                ? `
+              <a href="edit-product.php?id=${product.id}" class="btn btn-secondary">
+                <i class="fas fa-edit"></i>
+                Edit
+              </a>
+            `
+                : `
+              ${
+                product.shopee_link
+                  ? `
+                <a href="javascript:void(0)" 
+                   onclick="${isLoggedIn ? `window.open('${product.shopee_link}', '_blank')` : `requireAuth(() => window.open('${product.shopee_link}', '_blank'), 'melihat produk di toko online')`}"
+                   class="btn btn-secondary">
+                  <i class="fas fa-shopping-cart"></i>
+                  Beli
+                </a>
+              `
+                  : ""
+              }
+            `
             }
           </div>
         </div>
@@ -1011,6 +1047,16 @@ handleScroll() {
   }
 
   async toggleWishlist(productId) {
+    // Cek apakah user adalah admin
+    const isAdmin =
+      document.querySelector(".user-menu") !== null &&
+      document.querySelector(".user-menu").classList.contains("admin-menu")
+
+    if (isAdmin) {
+      this.showToastNotification("Admin tidak memerlukan fitur wishlist", "info")
+      return
+    }
+
     if (!this.isLoggedIn()) {
       this.showToastNotification("Anda harus login untuk menambahkan produk ke daftar yang disukai", "info")
       setTimeout(() => {
@@ -1630,3 +1676,16 @@ document.addEventListener("DOMContentLoaded", () => {
     loadReviews()
   }
 })
+
+// Global function for requiring authentication
+function requireAuth(callback, action = "melakukan aksi ini") {
+  if (!window.mabarApp.isLoggedIn()) {
+    window.mabarApp.showToastNotification(`Anda harus login untuk ${action}`, "info")
+    setTimeout(() => {
+      window.mabarApp.openAuthModal("login")
+    }, 1500)
+    return false
+  }
+  callback()
+  return true
+}
